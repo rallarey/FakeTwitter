@@ -1,124 +1,198 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
-import * as rtdb from "https://www.gstatic.com/firebasejs/9.10.0/firebase-database.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-analytics.js";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBgQyRNg9LuUQJzg6zl7AB6GQfsQqtwgxc",
-  authDomain: "twitter-4f92d.firebaseapp.com",
-  databaseURL: "https://twitter-4f92d-default-rtdb.firebaseio.com",
-  projectId: "twitter-4f92d",
-  storageBucket: "twitter-4f92d.appspot.com",
-  messagingSenderId: "444552325596",
-  appId: "1:444552325596:web:d87dda56d190cd445c4719",
-  measurementId: "G-VTRJQREXSD"
-};
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBgQyRNg9LuUQJzg6zl7AB6GQfsQqtwgxc",
+    authDomain: "twitter-4f92d.firebaseapp.com",
+    databaseURL: "https://twitter-4f92d-default-rtdb.firebaseio.com",
+    projectId: "twitter-4f92d",
+    storageBucket: "twitter-4f92d.appspot.com",
+    messagingSenderId: "444552325596",
+    appId: "1:444552325596:web:d87dda56d190cd445c4719",
+    measurementId: "G-VTRJQREXSD"
+  };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  // Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-let db = rtdb.getDatabase(app);
+let toggleLike = (tweetRef, uid)=>{
+  tweetRef.transaction((tObj) => {
+    if (!tObj) {
+      tObj = {likes: 0};
+    }
+    if (tObj.likes && tObj.likes_by_user[uid]) {
+      tObj.likes--;
+      tObj.likes_by_user[uid] = null;
+    } else {
+      tObj.likes++;
+      if (!tObj.likes_by_user) {
+        tObj.likes_by_user = {};
+      }
+      tObj.likes_by_user[uid] = true;
+    }
+    return tObj;
+  });
+}
 
-let tweetJSON = {
-  "content": "zeke is the best wizard101 player in the world!",
-  "likes": -1,
-  "retweets": 50,
-  "timestamp": 1663335385014,
-  //new Date().getTime(),
-  "author": {
-    "handle": "RyanAllarey",
-    "pic":   "https://i.guim.co.uk/img/media/327e46c3ab049358fad80575146be9e0e65686e7/0_56_1023_614/master/1023.jpg?width=1200&quality=85&auto=format&fit=max&s=4592a7be8bdbebd0e0b97e5e10a6c433"
-  }
-};
-/*
-let tweetJSON1 = {
-  "content": "zeke is the worst wizard101 player",
-  "likes": -1,
-  "retweets": 50,
-  "timestamp": 1663335386014,
-  //new Date().getTime(),
-  "author": {
-    "handle": "RyanAllarey",
-    "pic":   "https://i.guim.co.uk/img/media/327e46c3ab049358fad80575146be9e0e65686e7/0_56_1023_614/master/1023.jpg?width=1200&quality=85&auto=format&fit=max&s=4592a7be8bdbebd0e0b97e5e10a6c433"
-  }
-};
-let tweetJSON2 = {
-  "content": "dream is so hot! omg #dream",
-  "likes": -1,
-  "retweets": 50,
-  "timestamp": 1663335387014,
-  //new Date().getTime(),
-  "author": {
-    "handle": "RyanAllarey",
-    "pic":   "https://i.guim.co.uk/img/media/327e46c3ab049358fad80575146be9e0e65686e7/0_56_1023_614/master/1023.jpg?width=1200&quality=85&auto=format&fit=max&s=4592a7be8bdbebd0e0b97e5e10a6c433"
-  }
-};
-let tweetJSON3 = {
-  "content": "jadf;ajsdf",
-  "likes": -1,
-  "retweets": 50,
-  "timestamp": 1663335388014,
-  //new Date().getTime(),
-  "author": {
-    "handle": "RyanAllarey",
-    "pic":   "https://i.guim.co.uk/img/media/327e46c3ab049358fad80575146be9e0e65686e7/0_56_1023_614/master/1023.jpg?width=1200&quality=85&auto=format&fit=max&s=4592a7be8bdbebd0e0b97e5e10a6c433"
-  }
-};
-*/
-let renderTweet = (tweetObj, uuid)=>{
-  // prepend -> newer tweets on top
-  $("#alltweets").prepend(` 
-  <div class="card mb-3 tweet" data-uuid = "${uuid}" style="max-width: 540px;">
+let renderedTweetLikeLookup = {};
+
+let renderTweet = (tObj, uuid)=>{
+  $("#alltweets").prepend(`
+<div class="card mb-3 tweet" data-uuid="${uuid}" style="max-width: 540px;">
   <div class="row g-0">
     <div class="col-md-4">
-      <img src="${tweetObj.author.pic}" class="img-fluid rounded-start" alt="...">
+      <img src="${tObj.author.pic}" class="img-fluid rounded-start" alt="...">
     </div>
     <div class="col-md-8">
       <div class="card-body">
-        <h5 class="card-title">${tweetObj.author.handle}</h5>
-        <p class="card-text">${tweetObj.content}</p>
-        <!--<p class="card-text" like-button" data->tweetid="${uuid}">${tweetObj.likes} Likes</p>-->
-        <p class="card-text"><small class="text-muted">Tweeted at ${new Date(tweetObj.timestamp).toLocaleString()}</small></p>
+        <h5 class="card-title">${tObj.author.handle}</h5>
+        <p class="card-text">${tObj.content}</p>
+        <p class="card-text like-button" data-tweetid="${uuid}"></p>
+        <p class="card-text"><small class="text-muted">Tweeted at ${new Date(tObj.timestamp).toLocaleString()}</small></p>
       </div>
     </div>
   </div>
 </div>
   `);
+  firebase.database().ref("/likes").child(uuid).child("likes").on("value", ss=>{
+    $(`.like-button[data-tweetid=${uuid}]`).html(`${ss.val() || 0} Likes`);
+  });
+}
+let renderLogin = ()=>{
+  $("body").html(`
+  <div class = "sign-in">
+    <div class="row align-items-center">
+      <div class="col">
+        <h3>Sign Up</h3>
+        <!--
+        <input type = "text" placeholder = "Fullname" id = "new-user-name" class = form-control mb-3">
+        -->
+        <input type = "text" placeholder = "Email" id = "new-user-email" class = form-control mb-3">
+        <!--
+        <input type = "text" placeholder = "Username" id = "userInp" class = form-control mb-3">
+        -->
+        <input type = "password" placeholder = "Password" id = "new-user-password" class = form-control mb-3">
+        <input type = "password" placeholder = "Confirm Password" id = "confirm-password" class = form-control mb-3">
+        <button type = "text" id = "signup" class = "btn btn-outline-primary mb-3">Sign Up</button>
+        <button type = "text" id = "login" class = "btn btn-outline-primary mb-3">Google</button>
+        <input type="checkbox" id = "checkbox">Show Password
+      </div>
+    </div>
+  </div>
+
+
+  `);
+
+  $("#checkbox").on("click", ()=>{
+    var x = document.getElementById("new-user-password");
+    var y = document.getElementById("confirm-password");
+    if (x.type === "password") {
+      x.type = "text";
+    } else {
+      x.type = "password";
+    }
+    if (y.type === "password") {
+      y.type = "text";
+    } else {
+      y.type = "password";
+    }
+  })
+
+  
+
+  $("#signup").on("click", ()=>{
+
+    var userEmail = $("#new-user-email").val();
+    var userPassword = $("#new-user-password").val();
+    var confirmPassword = $("#confirm-password").val();
+
+    console.log(userEmail, userPassword, confirmPassword);
+    if (userPassword === confirmPassword) {
+      auth.createUserWithEmailAndPassword(userEmail, userPassword)
+        .then((userCredential)=> {
+          var user = userCredential.user;
+        })
+        .catch((error)=>{
+          var errorCode = error.code;
+          var errorMessage = error.message;
+        });
+    } else {
+      window.alert("Passwords must match!");
+    }
+  });
+
+  $("#login").on("click", ()=>{
+    var provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider)
+  });
 }
 
-/*
-renderTweet(tweetJSON1);
-renderTweet(tweetJSON2);
-renderTweet(tweetJSON3);
-*/
+let renderPage = (loggedIn)=>{
+  let myuid = loggedIn.uid;
+  $("body").html(`
 
+  <div class="row align-items-center">
+    <div class="col"> 
+      <h3>Tweet</h3>
+      <input type = "text" id = "addme">
+      <button id = "sendit">Send it</button>
+      <button id = "nukes">Delete</button>
+      <div id = "alltweets"></div>
+      <button id = "logout">LOG OUT</button>
+    </div>
+  </div>
 
-let tweetRef = rtdb.ref(db, "/tweets"); // "/tweets" is from database
-// onValue vs onChildAdded
-// onValue takes the entire thing
-// onChildAdded fires once for each new key created under that
-// e.g. for each new tweets data
-rtdb.onChildAdded(tweetRef, (ss)=>{ 
+  `);
 
-  let tweetObj = ss.val();
-  renderTweet(tweetObj, ss.key);
-  $(".tweet").off("click");
-  $(".tweet").on("click", (evt)=>{
-    alert($(evt.currentTarget).attr("data-uuid"));
-    //alert(tweetObj);
+  $("#logout").on("click", ()=>{
+    firebase.auth().signOut();
   });
-});
 
+  var userEmail;
 
-/*
-renderTweet(tweetJSON);
-$(".tweet").on("click", (evt)=>{
-  $(evt.currentTarget).addClass("clicked");
-  //jQuery version below
-  //$(evt.currentTarget).hide();
+  let rosterRef = firebase.database().ref("/roster");
+
+  $("#sendit").on("click", ()=>{
+    var thename = $("#addme").val();
+    var person = {
+      name: thename
+    }
+    let newPersonRef = rosterRef.push();
+    newPersonRef.set(person);
+  })
+
+  rosterRef.on("child_added", (ss)=>{
+    let rosterObj = ss.val();
+    let theIDs = Object.keys(rosterObj);
+    theIDs.map(anId=>{
+      let thePlayer = rosterObj[anId];
+      console.log(thePlayer);
+      $("#alltweets").append(`<div>${thePlayer}</div>`);
+    });
+  });
+
+  $("#nukes").on('click', ()=>{
+    rosterRef.remove();
+  })
+
+  let tweetRef = firebase.database().ref("/tweets");
+  tweetRef.on("child_added", (ss)=>{
+
+    let tObj = ss.val();
+    renderTweet(tObj, ss.key);
+    $(".like-button").off("click");
+    $(".like-button").on("click", (evt)=>{
+      let clickedTweet = $(evt.currentTarget).attr("data-tweetid");
+      let likesRef = firebase.database().ref("/likes").child(clickedTweet);
+      toggleLike(likesRef, myuid);
+    });
+  });
+};
+
+firebase.auth().onAuthStateChanged(user=>{
+  if (!user){
+    renderLogin();
+  } else {
+    renderPage(user);
+  }
 })
-*/
