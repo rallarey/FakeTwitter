@@ -3,3 +3,13 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+#loginpage:hover{
+  color: red;
+  cursor: pointer;
+}
+
+#signinpage:hover{
+  color: red;
+  cursor: pointer;
+}

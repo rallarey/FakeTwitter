@@ -58,30 +58,108 @@ let renderTweet = (tObj, uuid)=>{
     $(`.like-button[data-tweetid=${uuid}]`).html(`${ss.val() || 0} Likes`);
   });
 }
-let renderLogin = ()=>{
+
+let renderLogIn = ()=>{
+  $("body").html(`
+  <div class = "log-in">
+    <div class = "container">
+      <div class="row align-items-center">
+        
+        <div class = "col">
+          <h3>Login</h3>
+          <input type = "text" placeholder = "Email" id = "user-email" class = form-control mb-3">
+          <input type = "password" placeholder = "Password" id = "user-password" class = form-control mb-3">
+          <br>
+            <i>
+              <small id = "signinpage">Go back </small>
+            </i>
+            <small>
+              <input type="checkbox" id = "checkbox2"> Show Password
+            </small>
+          </br>
+          <button type = "text" id = "loginbutton" class = "btn btn-outline-primary mb-3">Login</button>
+          <button type = "text" id = "login2" class = "btn btn-outline-primary mb-3">Google</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  `);
+
+  $("#checkbox2").on("click", ()=>{
+    var x = document.getElementById("user-password");
+    if (x.type === "password") {
+      x.type = "text";
+    } else {
+      x.type = "password";
+    }
+  })
+
+  $("#login2").on("click", ()=>{
+    var provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider)
+  });
+
+  $("#signinpage").on("click", ()=>{
+    renderSignIn();
+  });
+
+  $("#loginbutton").on("click", ()=>{
+
+    var userEmail = $("#user-email").val();
+    var userPassword = $("#user-password").val();
+
+    auth.signInWithEmailAndPassword(userEmail, userPassword)
+      .then((userCredential)=> {
+        var user = userCredential.user;
+      })
+      .catch((error)=>{
+        var errorCode = error.code;
+        var errorMessage = error.message;
+      });
+  });
+}
+
+let renderSignIn = ()=>{
   $("body").html(`
   <div class = "sign-in">
-    <div class="row align-items-center">
-      <div class="col">
-        <h3>Sign Up</h3>
-        <!--
-        <input type = "text" placeholder = "Fullname" id = "new-user-name" class = form-control mb-3">
-        -->
-        <input type = "text" placeholder = "Email" id = "new-user-email" class = form-control mb-3">
-        <!--
-        <input type = "text" placeholder = "Username" id = "userInp" class = form-control mb-3">
-        -->
-        <input type = "password" placeholder = "Password" id = "new-user-password" class = form-control mb-3">
-        <input type = "password" placeholder = "Confirm Password" id = "confirm-password" class = form-control mb-3">
-        <button type = "text" id = "signup" class = "btn btn-outline-primary mb-3">Sign Up</button>
-        <button type = "text" id = "login" class = "btn btn-outline-primary mb-3">Google</button>
-        <input type="checkbox" id = "checkbox">Show Password
+    <div class = "container">
+      <div class="row align-items-center">
+        <div class="col">
+          <h3>Sign Up</h3>
+          <!--
+          <input type = "text" placeholder = "Fullname" id = "new-user-name" class = form-control mb-3">
+          -->
+          <input type = "text" placeholder = "Email" id = "new-user-email" class = form-control mb-3">
+          <!--
+          <input type = "text" placeholder = "Username" id = "userInp" class = form-control mb-3">
+          -->
+          <input type = "password" placeholder = "Password" id = "new-user-password" class = form-control mb-3">
+          <input type = "password" placeholder = "Confirm Password" id = "confirm-password" class = form-control mb-3">
+          <br>
+            <i>
+              <small id = "loginpage">Already have an account?</small>
+            </i>
+            <small>
+              <input type="checkbox" id = "checkbox"> Show Password
+            </small>
+          </br>
+    
+          <button type = "text" id = "signup" class = "btn btn-outline-primary mb-3">Sign Up</button>
+          <button type = "text" id = "login" class = "btn btn-outline-primary mb-3">Google</button>
+        </div>
+
       </div>
     </div>
   </div>
 
 
   `);
+
+  $("#loginpage").on("click", ()=>{
+    renderLogIn();
+  })
 
   $("#checkbox").on("click", ()=>{
     var x = document.getElementById("new-user-password");
@@ -97,8 +175,6 @@ let renderLogin = ()=>{
       y.type = "password";
     }
   })
-
-  
 
   $("#signup").on("click", ()=>{
 
@@ -125,10 +201,13 @@ let renderLogin = ()=>{
     var provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider)
   });
+
 }
+
 
 let renderPage = (loggedIn)=>{
   let myuid = loggedIn.uid;
+  console.log(myuid);
   $("body").html(`
 
   <div class="row align-items-center">
@@ -191,7 +270,7 @@ let renderPage = (loggedIn)=>{
 
 firebase.auth().onAuthStateChanged(user=>{
   if (!user){
-    renderLogin();
+    renderSignIn();
   } else {
     renderPage(user);
   }
