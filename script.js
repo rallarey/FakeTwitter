@@ -36,9 +36,10 @@ let toggleLike = (tweetRef, uid)=>{
 
 let renderedTweetLikeLookup = {};
 
-let renderTweet = (tObj, uuid)=>{
+let renderTweet = (tObj, tweetID)=>{
+  console.log(tweetID);
   $("#alltweets").prepend(`
-<div class="card mb-3 tweet" data-uuid="${uuid}" style="max-width: 540px;">
+<div class="card mb-3 tweet" data-uuid="${tweetID}" style="max-width: 540px;">
   <div class="row g-0">
     <div class="col-md-4">
       <img src="${tObj.author.pic}" class="img-fluid rounded-start" alt="...">
@@ -47,15 +48,15 @@ let renderTweet = (tObj, uuid)=>{
       <div class="card-body">
         <h5 class="card-title">${tObj.author.handle}</h5>
         <p class="card-text">${tObj.content}</p>
-        <p class="card-text like-button" data-tweetid="${uuid}"></p>
+        <p class="card-text like-button" data-tweetid="${tweetID}"></p>
         <p class="card-text"><small class="text-muted">Tweeted at ${new Date(tObj.timestamp).toLocaleString()}</small></p>
       </div>
     </div>
   </div>
 </div>
   `);
-  firebase.database().ref("/likes").child(uuid).child("likes").on("value", ss=>{
-    $(`.like-button[data-tweetid=${uuid}]`).html(`${ss.val() || 0} Likes`);
+  firebase.database().ref("/likes").child(tweetID).child("likes").on("value", ss=>{
+    $(`.like-button[data-tweetid=${tweetID}]`).html(`${ss.val() || 0} Likes`);
   });
 }
 
@@ -182,7 +183,6 @@ let renderSignIn = ()=>{
     var userPassword = $("#new-user-password").val();
     var confirmPassword = $("#confirm-password").val();
 
-    console.log(userEmail, userPassword, confirmPassword);
     if (userPassword === confirmPassword) {
       auth.createUserWithEmailAndPassword(userEmail, userPassword)
         .then((userCredential)=> {
@@ -207,15 +207,17 @@ let renderSignIn = ()=>{
 
 let renderPage = (loggedIn)=>{
   let myuid = loggedIn.uid;
-  console.log(myuid);
+
+  
   $("body").html(`
 
   <div class="row align-items-center">
     <div class="col"> 
       <h3>Tweet</h3>
       <input type = "text" id = "addme">
-      <button id = "sendit">Send it</button>
-      <button id = "nukes">Delete</button>
+      <button id = "sendit">Tweet</button>
+      <br>
+      </br>
       <div id = "alltweets"></div>
       <button id = "logout">LOG OUT</button>
     </div>
@@ -223,12 +225,14 @@ let renderPage = (loggedIn)=>{
 
   `);
 
+
   $("#logout").on("click", ()=>{
     firebase.auth().signOut();
   });
 
   var userEmail;
 
+  /*
   let rosterRef = firebase.database().ref("/roster");
 
   $("#sendit").on("click", ()=>{
@@ -253,11 +257,12 @@ let renderPage = (loggedIn)=>{
   $("#nukes").on('click', ()=>{
     rosterRef.remove();
   })
-
+*/
   let tweetRef = firebase.database().ref("/tweets");
   tweetRef.on("child_added", (ss)=>{
 
     let tObj = ss.val();
+    console.log(tObj);
     renderTweet(tObj, ss.key);
     $(".like-button").off("click");
     $(".like-button").on("click", (evt)=>{
