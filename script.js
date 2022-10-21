@@ -109,7 +109,7 @@ let renderLogIn = ()=>{
         var avatar = user["photoURL"];
         var email = user["email"];
         var uid = user["uid"];
-        writeUserData(uid, userName, email);
+        writeUserData(uid, userName, email, avatar);
       }).catch((error) => {
         // Handle Errors here.
         var errorCode = error.code;
@@ -235,7 +235,7 @@ let renderSignIn = ()=>{
         var avatar = user["photoURL"];
         var email = user["email"];
         var uid = user["uid"];
-        writeUserData(uid, userName, email);
+        writeUserData(uid, userName, email, avatar);
       }).catch((error) => {
         // Handle Errors here.
         var errorCode = error.code;
@@ -249,15 +249,13 @@ let renderSignIn = ()=>{
 
 }
 
-let writeUserData = (userId, name, email) => {
+let writeUserData = (userId, name, email, picURL) => {
   let usersRef = firebase.database().ref('/users/' + userId);
 
   usersRef.update({
     username: name,
     email: email,
-    /*
-    profile_picture : imageUrl
-    */
+    profile_picture : picURL
   })
 }
 
