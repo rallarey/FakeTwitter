@@ -264,6 +264,7 @@ let writeUserData = (userId, name, email) => {
 
 let renderPage = (loggedIn)=>{
   let myuid = loggedIn.uid;
+  var username;
 
   
   $("body").html(`
@@ -288,6 +289,8 @@ let renderPage = (loggedIn)=>{
   });
 
   var userEmail;
+  var message;
+  var date;
 
   /*
   let rosterRef = firebase.database().ref("/roster");
@@ -314,8 +317,43 @@ let renderPage = (loggedIn)=>{
   $("#nukes").on('click', ()=>{
     rosterRef.remove();
   })
-*/
-  let tweetRef = firebase.database().ref("/tweets");
+*/  
+  // let tweetRefUsers = firebase.database().ref("/tweets/" + tweetID); // NEED TWEET ID
+  let tweetRef = firebase.database().ref("/tweets/");
+  let usersRef = firebase.database().ref("/users");
+
+  $("#sendit").on("click", ()=>{
+    message = $("#addme").val();
+    date = Date.now();
+    /*
+    usersRef.child(myuid).get().then((ss) => {
+      if (ss.exists()) {
+        ss.forEach((child) => {
+          if (child.key === "username"){
+            username = child.val();
+          }
+        })
+      } else {
+        console.log("No data available");
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
+    */
+    
+    let newTweetRef = tweetRef.push({
+      author: myuid,
+      content: message,
+      retweets: 0,
+      timestamp: date,
+    })
+    var postID = newTweetRef.key;
+
+    var pic = "https://i.guim.co.uk/img/media/327e46c3ab049358fad80575146be9e0e65686e7/0_56_1023_614/master/1023.jpg?width=1200&quality=85&auto=format&fit=max&s=4592a7be8bdbebd0e0b97e5e10a6c433"
+
+    
+  })
+
   tweetRef.on("child_added", (ss)=>{
 
     let tObj = ss.val();
@@ -328,6 +366,7 @@ let renderPage = (loggedIn)=>{
     });
   });
 };
+
 
 firebase.auth().onAuthStateChanged(user=>{
   if (!user){
