@@ -37,7 +37,6 @@ let toggleLike = (tweetRef, uid)=>{
 let renderedTweetLikeLookup = {};
 
 let renderTweet = (tObj, tweetID)=>{
-  console.log(tweetID);
   $("#alltweets").prepend(`
 <div class="card mb-3 tweet" data-uuid="${tweetID}" style="max-width: 540px;">
   <div class="row g-0">
@@ -100,6 +99,26 @@ let renderLogIn = ()=>{
   $("#login2").on("click", ()=>{
     var provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider)
+      .then((result)=>{
+        var credential = result.credential;
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        var token = credential.accessToken;
+        // The signed-in user info.
+        var user = result.user;
+        var userName = user["displayName"];
+        var avatar = user["photoURL"];
+        var email = user["email"];
+        var uid = user["uid"];
+        writeUserData(uid, userName, email);
+      }).catch((error) => {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        // The email of the user's account used.
+        var email = error.email;
+        // The firebase.auth.AuthCredential type that was used.
+        var credential = error.credential;
+      });
   });
 
   $("#signinpage").on("click", ()=>{
@@ -118,6 +137,7 @@ let renderLogIn = ()=>{
       .catch((error)=>{
         var errorCode = error.code;
         var errorMessage = error.message;
+        alert(errorMessage);
       });
   });
 }
@@ -195,6 +215,7 @@ let renderSignIn = ()=>{
         .catch((error)=>{
           var errorCode = error.code;
           var errorMessage = error.message;
+          alert(errorMessage);
         });
     } else {
       window.alert("Passwords must match!");
@@ -204,14 +225,32 @@ let renderSignIn = ()=>{
   $("#login").on("click", ()=>{
     var provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider)
+      .then((result)=>{
+        var credential = result.credential;
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        var token = credential.accessToken;
+        // The signed-in user info.
+        var user = result.user;
+        var userName = user["displayName"];
+        var avatar = user["photoURL"];
+        var email = user["email"];
+        var uid = user["uid"];
+        writeUserData(uid, userName, email);
+      }).catch((error) => {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        // The email of the user's account used.
+        var email = error.email;
+        // The firebase.auth.AuthCredential type that was used.
+        var credential = error.credential;
+      });
   });
 
 }
 
 let writeUserData = (userId, name, email) => {
   let usersRef = firebase.database().ref('/users/' + userId);
-
-  console.log(userId, name);
 
   usersRef.update({
     username: name,
@@ -226,7 +265,6 @@ let writeUserData = (userId, name, email) => {
 let renderPage = (loggedIn)=>{
   let myuid = loggedIn.uid;
 
-  console.log(myuid);
   
   $("body").html(`
 
@@ -281,7 +319,6 @@ let renderPage = (loggedIn)=>{
   tweetRef.on("child_added", (ss)=>{
 
     let tObj = ss.val();
-    console.log(tObj);
     renderTweet(tObj, ss.key);
     $(".like-button").off("click");
     $(".like-button").on("click", (evt)=>{
