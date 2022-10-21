@@ -129,9 +129,9 @@ let renderSignIn = ()=>{
       <div class="row align-items-center">
         <div class="col">
           <h3>Sign Up</h3>
-          <!--
+          
           <input type = "text" placeholder = "Fullname" id = "new-user-name" class = form-control mb-3">
-          -->
+          
           <input type = "text" placeholder = "Email" id = "new-user-email" class = form-control mb-3">
           <!--
           <input type = "text" placeholder = "Username" id = "userInp" class = form-control mb-3">
@@ -183,10 +183,14 @@ let renderSignIn = ()=>{
     var userPassword = $("#new-user-password").val();
     var confirmPassword = $("#confirm-password").val();
 
+    var userName = $("#new-user-name").val();
+
     if (userPassword === confirmPassword) {
       auth.createUserWithEmailAndPassword(userEmail, userPassword)
         .then((userCredential)=> {
           var user = userCredential.user;
+          let myuid = user.uid;
+          writeUserData(myuid, userName, userEmail);
         })
         .catch((error)=>{
           var errorCode = error.code;
@@ -204,10 +208,25 @@ let renderSignIn = ()=>{
 
 }
 
+let writeUserData = (userId, name, email) => {
+  let usersRef = firebase.database().ref('/users/' + userId);
+
+  console.log(userId, name);
+
+  usersRef.update({
+    username: name,
+    email: email,
+    /*
+    profile_picture : imageUrl
+    */
+  })
+}
+
 
 let renderPage = (loggedIn)=>{
   let myuid = loggedIn.uid;
 
+  console.log(myuid);
   
   $("body").html(`
 
