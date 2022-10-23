@@ -165,7 +165,12 @@ let renderSignIn = ()=>{
           <span id="status"></span>
             <input type="file" id="fileupload" accept="image/png, image/jpeg"/>
             <button id="imageupload">Upload Image</button>
+              <div id="output">
+              </div>
           </div>
+          <br>
+            <small id = "image">*u must hit upload image for your profile picture to upload</small>
+          </br>
 
           <br>
             <i>
@@ -179,9 +184,6 @@ let renderSignIn = ()=>{
           <button type = "text" id = "signup" class = "btn btn-outline-primary mb-3">Sign Up</button>
           <button type = "text" id = "login" class = "btn btn-outline-primary mb-3">Google</button>
 
-          <h1>Uploaded:</h1>
-          <div id="output">
-          </div>
                 
         </div>
 
@@ -220,7 +222,7 @@ let renderSignIn = ()=>{
     fileReader.addEventListener("load", async (evt)=>{
       console.log(evt);
       let theFileData = fileReader.result;
-      $("#output").html(`<img src="${theFileData}"/>`);
+      $("#output").html(`File uploaded!`);
       $("#status").html("");
       console.log(theFileData);
       profile_picture = theFileData;

@@ -17,3 +17,7 @@ body {
 #like:hover{
   cursor: pointer;
 }
+
+#image{
+  color: red;
+}
