@@ -13,3 +13,7 @@ body {
   color: red;
   cursor: pointer;
 }
+
+#like:hover{
+  cursor: pointer;
+}

@@ -36,18 +36,19 @@ let toggleLike = (tweetRef, uid)=>{
 
 let renderedTweetLikeLookup = {};
 
-let renderTweet = (tObj, tweetID)=>{
+let renderTweet = (tObj, tweetID, userObj)=>{
+
   $("#alltweets").prepend(`
 <div class="card mb-3 tweet" data-uuid="${tweetID}" style="max-width: 540px;">
   <div class="row g-0">
     <div class="col-md-4">
-      <img src="${tObj.author.pic}" class="img-fluid rounded-start" alt="...">
+      <img src="${userObj.profile_picture}" class="img-fluid rounded-start" alt="...">
     </div>
     <div class="col-md-8">
       <div class="card-body">
-        <h5 class="card-title">${tObj.author.handle}</h5>
+        <h5 class="card-title">${userObj.username}</h5>
         <p class="card-text">${tObj.content}</p>
-        <p class="card-text like-button" data-tweetid="${tweetID}"></p>
+        <p class="card-text like-button" id = "like" data-tweetid="${tweetID}"></p>
         <p class="card-text"><small class="text-muted">Tweeted at ${new Date(tObj.timestamp).toLocaleString()}</small></p>
       </div>
     </div>
@@ -143,6 +144,8 @@ let renderLogIn = ()=>{
 }
 
 let renderSignIn = ()=>{
+  var profile_picture = '';
+
   $("body").html(`
   <div class = "sign-in">
     <div class = "container">
@@ -158,6 +161,12 @@ let renderSignIn = ()=>{
           -->
           <input type = "password" placeholder = "Password" id = "new-user-password" class = form-control mb-3">
           <input type = "password" placeholder = "Confirm Password" id = "confirm-password" class = form-control mb-3">
+          <div id="fileuploadwrap">
+          <span id="status"></span>
+            <input type="file" id="fileupload" accept="image/png, image/jpeg"/>
+            <button id="imageupload">Upload Image</button>
+          </div>
+
           <br>
             <i>
               <small id = "loginpage">Already have an account?</small>
@@ -169,6 +178,11 @@ let renderSignIn = ()=>{
     
           <button type = "text" id = "signup" class = "btn btn-outline-primary mb-3">Sign Up</button>
           <button type = "text" id = "login" class = "btn btn-outline-primary mb-3">Google</button>
+
+          <h1>Uploaded:</h1>
+          <div id="output">
+          </div>
+                
         </div>
 
       </div>
@@ -196,6 +210,22 @@ let renderSignIn = ()=>{
       y.type = "password";
     }
   })
+  
+  $("#imageupload").on("click", (evt)=>{
+    const fileReader = new FileReader();
+    $("#status").html("Starting upload...");
+    
+    var myFile = $('#fileupload').prop('files')[0];
+    fileReader.readAsDataURL(myFile);
+    fileReader.addEventListener("load", async (evt)=>{
+      console.log(evt);
+      let theFileData = fileReader.result;
+      $("#output").html(`<img src="${theFileData}"/>`);
+      $("#status").html("");
+      console.log(theFileData);
+      profile_picture = theFileData;
+    });
+  });
 
   $("#signup").on("click", ()=>{
 
@@ -210,7 +240,7 @@ let renderSignIn = ()=>{
         .then((userCredential)=> {
           var user = userCredential.user;
           let myuid = user.uid;
-          writeUserData(myuid, userName, userEmail);
+          writeUserData(myuid, userName, userEmail, profile_picture);
         })
         .catch((error)=>{
           var errorCode = error.code;
@@ -261,8 +291,9 @@ let writeUserData = (userId, name, email, picURL) => {
 
 
 let renderPage = (loggedIn)=>{
+  var username = '';
+  var pic = '';
   let myuid = loggedIn.uid;
-  var username;
 
   
   $("body").html(`
@@ -290,35 +321,8 @@ let renderPage = (loggedIn)=>{
   var message;
   var date;
 
-  /*
-  let rosterRef = firebase.database().ref("/roster");
-
-  $("#sendit").on("click", ()=>{
-    var thename = $("#addme").val();
-    var person = {
-      name: thename
-    }
-    let newPersonRef = rosterRef.push();
-    newPersonRef.set(person);
-  })
-
-  rosterRef.on("child_added", (ss)=>{
-    let rosterObj = ss.val();
-    let theIDs = Object.keys(rosterObj);
-    theIDs.map(anId=>{
-      let thePlayer = rosterObj[anId];
-      console.log(thePlayer);
-      $("#alltweets").append(`<div>${thePlayer}</div>`);
-    });
-  });
-
-  $("#nukes").on('click', ()=>{
-    rosterRef.remove();
-  })
-*/  
   // let tweetRefUsers = firebase.database().ref("/tweets/" + tweetID); // NEED TWEET ID
   let tweetRef = firebase.database().ref("/tweets/");
-  let usersRef = firebase.database().ref("/users");
 
   $("#sendit").on("click", ()=>{
     message = $("#addme").val();
@@ -354,16 +358,60 @@ let renderPage = (loggedIn)=>{
 
   tweetRef.on("child_added", (ss)=>{
 
+    let usersRef = firebase.database().ref("/users");
     let tObj = ss.val();
-    renderTweet(tObj, ss.key);
+
+    usersRef.child(tObj.author).get().then((snapshot) =>{
+      let userObj = snapshot.val();
+      console.log(userObj);
+      renderTweet(tObj, ss.key, userObj);
+        $(".like-button").off("click");
+        $(".like-button").on("click", (evt)=>{
+        let clickedTweet = $(evt.currentTarget).attr("data-tweetid");
+        let likesRef = firebase.database().ref("/likes").child(clickedTweet);
+        toggleLike(likesRef, myuid);
+      });
+    });
+    /*
+    renderTweet(tObj, ss.key, userObj);
     $(".like-button").off("click");
     $(".like-button").on("click", (evt)=>{
       let clickedTweet = $(evt.currentTarget).attr("data-tweetid");
       let likesRef = firebase.database().ref("/likes").child(clickedTweet);
       toggleLike(likesRef, myuid);
     });
+    */
   });
 };
+
+let getUserData = (tObj) => {
+
+  let usersRef = firebase.database().ref("/users");
+  console.log(tObj.author);
+
+  usersRef.child(tObj.author).get().then((ss) => {
+    console.log(ss.val());
+    let userObj = ss.val();
+    /*
+    if (ss.exists()) {
+      ss.forEach((child) => {
+        if (child.key === "username"){
+          var username = child.val();
+        }
+        if (child.key === "profile_picture"){
+          var pic = child.val();
+        }
+      })
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    console.error(error);
+  });
+  */
+  });
+}
+
 
 
 firebase.auth().onAuthStateChanged(user=>{
